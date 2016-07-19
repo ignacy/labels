@@ -5,25 +5,25 @@ import (
 	"strings"
 
 	"github.com/google/go-github/github"
+	"golang.org/x/oauth2"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
-import "golang.org/x/oauth2"
 
-const (
-	//	advanonRepoId  = "61127437"
-	//	advanonOwnerId = "10156154"
-	advanonRepoId  = "Advanon-app"
-	advanonOwnerId = "Advanon"
+var (
+	ownerId     = kingpin.Arg("ownerId", "Id (username) of github repository owner").Required().String()
+	repoId      = kingpin.Arg("repoId", "Id (name) of the repository").Required().String()
+	accessToken = kingpin.Arg("accessToken", "Access token from github").Envar("GITHUB_ACCESS_TOKEN").String()
 )
 
 func main() {
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: "87970a254801738fedf7e8f03a1fab9a2d515c17"},
-	)
+	kingpin.Parse()
+
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: *accessToken})
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
 
 	client := github.NewClient(tc)
 
-	prs, _, err := client.Issues.ListByRepo(advanonOwnerId, advanonRepoId, nil)
+	prs, _, err := client.Issues.ListByRepo(*ownerId, *repoId, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
