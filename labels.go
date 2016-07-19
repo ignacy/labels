@@ -2,9 +2,9 @@ package main
 
 import (
 	"log"
-	"strings"
 
 	"github.com/google/go-github/github"
+	"github.com/ignacy/labels/presenters"
 	"golang.org/x/oauth2"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -23,19 +23,10 @@ func main() {
 
 	client := github.NewClient(tc)
 
-	prs, _, err := client.Issues.ListByRepo(*ownerId, *repoId, nil)
+	pullRequests, _, err := client.Issues.ListByRepo(*ownerId, *repoId, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, pr := range prs {
-		title := *pr.Title
-		number := *pr.Number
-		labels := []string{}
-		for _, l := range pr.Labels {
-			labels = append(labels, *l.Name)
-		}
-		all_labels := strings.Join(labels, ",")
-		log.Printf("%4d | %s", number, title)
-		log.Printf("Labels: %s", all_labels)
-	}
+
+	presenters.PrintPullRequestData(pullRequests)
 }
