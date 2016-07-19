@@ -28,5 +28,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	presenters.PrintPullRequestData(pullRequests)
+	//	presenters.PrintPullRequestData(pullRequests)
+	presenters.SendPullRequestDataToSlack(pullRequests)
 }
