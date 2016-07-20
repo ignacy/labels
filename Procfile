@@ -1,0 +1,1 @@
+web: ./labels $GITHUB_OWNER $GITHUB_REPO
