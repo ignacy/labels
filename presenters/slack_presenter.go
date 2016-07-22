@@ -62,12 +62,12 @@ func SendPullRequestDataToSlack(pullRequests []*github.Issue, owner string, repo
 }
 
 func format(pullRequests []*github.Issue, owner string, repo string) string {
-    result := "Pull request status \n"
-    result += fmt.Sprintf("_There are %d open PR's _\n", len(pullRequests))
+    numberOfOpened := len(pullRequests)
+    result := fmt.Sprintf("Pull request status: %d (opened) %s \n", numberOfOpened, strings.Repeat(":pick:", numberOfOpened))
 
     for _, pr := range pullRequests {
         number := *pr.Number
-        result += fmt.Sprintf("(%4d) %s :label: %s \n", number, prLink(owner, repo, *pr.Title, number), labelsList(pr.Labels))
+        result += fmt.Sprintf("%4d %s %s %s \n", number, prLink(owner, repo, *pr.Title, number), labelsList(pr.Labels), listAssignees(pr.Assignees))
     }
     return result
 }
@@ -81,5 +81,22 @@ func labelsList(listOfLabels []github.Label) string {
     for _, l := range listOfLabels {
         labels = append(labels, "*"+*l.Name+"*")
     }
-    return strings.Join(labels, ",")
+
+    if len(labels) == 0 {
+        return ""
+    }
+    return fmt.Sprintf(":label: %s", strings.Join(labels, ","))
+
+}
+
+func listAssignees(listOfAssignees []*github.User) string {
+    users := []string{}
+    for _, u := range listOfAssignees {
+        users = append(users, "*"+*u.Login+"*")
+    }
+
+    if len(users) == 0 {
+        return ""
+    }
+    return fmt.Sprintf(":bust_in_silhouette: %s", strings.Join(users, ","))
 }
