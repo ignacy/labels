@@ -1,33 +1,36 @@
 package main
 
 import (
-	"log"
+    "log"
 
-	"github.com/google/go-github/github"
-	"github.com/ignacy/labels/presenters"
-	"golang.org/x/oauth2"
-	"gopkg.in/alecthomas/kingpin.v2"
+    "github.com/google/go-github/github"
+    "github.com/ignacy/labels/presenters"
+    "golang.org/x/oauth2"
+    "gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
-	ownerId     = kingpin.Arg("ownerId", "Id (username) of github repository owner").Required().String()
-	repoId      = kingpin.Arg("repoId", "Id (name) of the repository").Required().String()
-	accessToken = kingpin.Arg("accessToken", "Access token from github").Envar("GITHUB_ACCESS_TOKEN").String()
+    ownerId     = kingpin.Arg("ownerId", "Id (username) of github repository owner").Required().String()
+    repoId      = kingpin.Arg("repoId", "Id (name) of the repository").Required().String()
+    toSlack     = kingpin.Flag("slack", "With Slack notification").Default(true).Bool()
+    accessToken = kingpin.Arg("accessToken", "Access token from github").Envar("GITHUB_ACCESS_TOKEN").String()
 )
 
 func main() {
-	kingpin.Parse()
+    kingpin.Parse()
 
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: *accessToken})
-	tc := oauth2.NewClient(oauth2.NoContext, ts)
+    ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: *accessToken})
+    tc := oauth2.NewClient(oauth2.NoContext, ts)
 
-	client := github.NewClient(tc)
+    client := github.NewClient(tc)
 
-	pullRequests, _, err := client.Issues.ListByRepo(*ownerId, *repoId, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+    pullRequests, _, err := client.Issues.ListByRepo(*ownerId, *repoId, nil)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	//	presenters.PrintPullRequestData(pullRequests)
-	presenters.SendPullRequestDataToSlack(pullRequests)
+    presenters.PrintPullRequestData(pullRequests)
+    if toSlack {
+        presenters.SendPullRequestDataToSlack(pullRequests)
+    }
 }
