@@ -16,24 +16,35 @@ import (
 const (
     defaultBotName = "github-update"
     defaultEmoji   = ":ghost:"
+    defaultColor   = "#7CD197"
 )
 
 var url = os.Getenv("SLACK_WEBHOOK_URL")
 
-// Message - represents message to be send to Slack
-type Message struct {
-    Text      string `json:"text"`
-    Username  string `json:"username"`
-    IconEmoji string `json:"icon_emoji"`
+type attachments struct {
+    Attachments []*Attachment `json:"attachments"`
 }
 
-// NewMessage builds a new message with text and default username and
-// emoji
-func NewMessage(text string) *Message {
-    return &Message{
+// Attachment type used to wrap PR data
+type Attachment struct {
+    Fallback  string `json:"fallback"`
+    Pretext   string `json:"pretext"`
+    Title     string `json:"title"`
+    TitleLink string `json:"title_link"`
+    Text      string `json:"text"`
+    Color     string `json:"color"`
+}
+
+// Builds new attachment with prefiled data
+func NewAttachment(title, titleLink, text string) *Attachment {
+    fallback := fmt.Sprintf("%s - %s", title, titleLink)
+    return &Attachment{
+        fallback,
+        "",
+        title,
+        titleLink,
         text,
-        defaultBotName,
-        defaultEmoji,
+        defaultColor,
     }
 }
 
@@ -42,7 +53,7 @@ func NewMessage(text string) *Message {
 func SendPullRequestDataToSlack(pullRequests []*github.Issue, owner string, repo string) {
     log.Println("URL:>", url)
 
-    m := NewMessage(format(pullRequests, owner, repo))
+    m := &attachments{format(pullRequests, owner, repo)}
 
     b := new(bytes.Buffer)
     json.NewEncoder(b).Encode(m)
@@ -61,25 +72,30 @@ func SendPullRequestDataToSlack(pullRequests []*github.Issue, owner string, repo
     log.Println("response Body:", string(body))
 }
 
-func format(pullRequests []*github.Issue, owner string, repo string) string {
-    numberOfOpened := len(pullRequests)
-    result := fmt.Sprintf("Pull request status: %d (opened) %s \n", numberOfOpened, strings.Repeat(":pick:", numberOfOpened))
+func format(pullRequests []*github.Issue, owner string, repo string) []*Attachment {
+    attachments := []*Attachment{}
 
     for _, pr := range pullRequests {
         number := *pr.Number
-        result += fmt.Sprintf("%4d %s %s %s \n", number, prLink(owner, repo, *pr.Title, number), labelsList(pr.Labels), listAssignees(pr.Assignees))
+        newAttachment := NewAttachment(
+            fmt.Sprintf("(%d) %s", number, *pr.Title),
+            prLink(owner, repo, number),
+            fmt.Sprintf("%s %s", labelsList(pr.Labels), listAssignees(pr.Assignees)),
+        )
+        attachments = append(attachments, newAttachment)
+        //result += fmt.Sprintf("%4d %s %s %s \n", number, prLink(owner, repo, *pr.Title, number), , listAssignees(pr.Assignees))
     }
-    return result
+    return attachments
 }
 
-func prLink(owner string, repo string, prTitle string, prNumber int) string {
-    return fmt.Sprintf("<http://github.com/%s/%s/pull/%d|%s>", owner, repo, prNumber, prTitle)
+func prLink(owner string, repo string, prNumber int) string {
+    return fmt.Sprintf("http://github.com/%s/%s/pull/%d", owner, repo, prNumber)
 }
 
 func labelsList(listOfLabels []github.Label) string {
     labels := []string{}
     for _, l := range listOfLabels {
-        labels = append(labels, "*"+*l.Name+"*")
+        labels = append(labels, *l.Name)
     }
 
     if len(labels) == 0 {
@@ -92,7 +108,7 @@ func labelsList(listOfLabels []github.Label) string {
 func listAssignees(listOfAssignees []*github.User) string {
     users := []string{}
     for _, u := range listOfAssignees {
-        users = append(users, "*"+*u.Login+"*")
+        users = append(users, *u.Login)
     }
 
     if len(users) == 0 {
