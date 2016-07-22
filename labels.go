@@ -10,9 +10,9 @@ import (
 )
 
 var (
-    ownerId     = kingpin.Arg("ownerId", "Id (username) of github repository owner").Required().String()
-    repoId      = kingpin.Arg("repoId", "Id (name) of the repository").Required().String()
-    toSlack     = kingpin.Flag("slack", "With Slack notification").Default(true).Bool()
+    owner       = kingpin.Arg("owner", "Id (username) of github repository owner").Required().String()
+    repo        = kingpin.Arg("repo", "Id (name) of the repository").Required().String()
+    skipSlack   = kingpin.Flag("skipSlack", "With Slack notification").Bool()
     accessToken = kingpin.Arg("accessToken", "Access token from github").Envar("GITHUB_ACCESS_TOKEN").String()
 )
 
@@ -24,13 +24,13 @@ func main() {
 
     client := github.NewClient(tc)
 
-    pullRequests, _, err := client.Issues.ListByRepo(*ownerId, *repoId, nil)
+    pullRequests, _, err := client.Issues.ListByRepo(*owner, *repo, nil)
     if err != nil {
         log.Fatal(err)
     }
 
     presenters.PrintPullRequestData(pullRequests)
-    if toSlack {
-        presenters.SendPullRequestDataToSlack(pullRequests)
+    if !*skipSlack {
+        presenters.SendPullRequestDataToSlack(pullRequests, *owner, *repo)
     }
 }
