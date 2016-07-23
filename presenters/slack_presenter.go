@@ -16,7 +16,7 @@ import (
 const (
     defaultBotName = "github-update"
     defaultEmoji   = ":ghost:"
-    defaultColor   = "#7CD197"
+    defaultColor   = "#e5e5e5"
 )
 
 var url = os.Getenv("SLACK_WEBHOOK_URL")
@@ -33,10 +33,11 @@ type Attachment struct {
     TitleLink string `json:"title_link"`
     Text      string `json:"text"`
     Color     string `json:"color"`
+    Footer    string `json:"footer"`
 }
 
 // Builds new attachment with prefiled data
-func NewAttachment(title, titleLink, text string) *Attachment {
+func NewAttachment(title, titleLink, text, color, footer string) *Attachment {
     fallback := fmt.Sprintf("%s - %s", title, titleLink)
     return &Attachment{
         fallback,
@@ -44,7 +45,8 @@ func NewAttachment(title, titleLink, text string) *Attachment {
         title,
         titleLink,
         text,
-        defaultColor,
+        color,
+        footer,
     }
 }
 
@@ -81,9 +83,10 @@ func format(pullRequests []*github.Issue, owner string, repo string) []*Attachme
             fmt.Sprintf("(%d) %s", number, *pr.Title),
             prLink(owner, repo, number),
             fmt.Sprintf("%s %s", labelsList(pr.Labels), listAssignees(pr.Assignees)),
+            labelColorOrDefault(pr.Labels),
+            fmt.Sprintf("Opened by %s", *pr.User.Login),
         )
         attachments = append(attachments, newAttachment)
-        //result += fmt.Sprintf("%4d %s %s %s \n", number, prLink(owner, repo, *pr.Title, number), , listAssignees(pr.Assignees))
     }
     return attachments
 }
@@ -102,7 +105,13 @@ func labelsList(listOfLabels []github.Label) string {
         return ""
     }
     return fmt.Sprintf(":label: %s", strings.Join(labels, ","))
+}
 
+func labelColorOrDefault(listOfLabels []github.Label) string {
+    if len(listOfLabels) == 0 {
+        return defaultColor
+    }
+    return *listOfLabels[0].Color
 }
 
 func listAssignees(listOfAssignees []*github.User) string {

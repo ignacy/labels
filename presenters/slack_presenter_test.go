@@ -2,18 +2,18 @@ package presenters
 
 import "testing"
 
-func TestBuildingANewMessage(t *testing.T) {
-    message := NewMessage("Bazinga")
+func TestBuildingANewAttachment(t *testing.T) {
+    attachment := NewAttachment("Bazinga", "foo", "bar", "#fff", "footer")
 
-    if message.Text != "Bazinga" {
-        t.Error("Failed to set Message text")
+    if attachment.Title != "Bazinga" {
+        t.Error("Failed to set attachments title")
     }
 
-    if message.Username != "github-update" {
-        t.Error("Failed to set default username")
+    if attachment.Text != "bar" {
+        t.Error("Failed to set attachments text")
     }
 
-    if message.IconEmoji != ":ghost:" {
-        t.Error("Failed to set default emoji")
+    if attachment.Footer != "footer" {
+        t.Error("Failed to set attachemnts footer")
     }
 }
