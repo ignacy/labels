@@ -1,7 +1,7 @@
 ## Labels
 
 Github doesn't send notifications when labels get changed on a
-PR. Sometimes this is a problem. IF your workflow depends on it you
+PR. Sometimes this is a problem. If your workflow depends on it you
 can use labels to send periodic notifications to Slack channel with
 the information about current PR status.
 
