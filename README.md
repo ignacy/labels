@@ -36,6 +36,12 @@ Args:
 To make the Slack integration work you will need to setup a webhook on
 Slack and then set it in the SLACK_WEBHOOK_URL environment variable.
 
+## Example
+
+
+![example.png](https://github.com/ignacy/labels/raw/master/resources/example.png)
+
+
 ## License
 
 This code is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
